@@ -28,7 +28,7 @@ services:
       - MYSQL_USER=alkosto_user
       - MYSQL_PASSWORD=alkosto_password
     ports:
-      - "3306:3306"
+      - "3307:3306"
 
 volumes:
   mysql_data:
