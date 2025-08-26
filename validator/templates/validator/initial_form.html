@@ -1,0 +1,118 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validación de Identidad</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/initial_form.css' %}">
+    <style>
+        .export-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <a href="{% url 'export_records' %}" class="btn btn-success export-button">
+        <i class="fas fa-file-excel"></i> Exportar Registros
+    </a>
+    <div class="main-container">
+        <div class="validation-card">
+            <div class="logo-container">
+                <img src="{% static 'img/logo.png' %}" alt="Logo de la empresa" class="header-logo">
+                <h1 class="form-title">Validación de Identidad</h1>
+                <p class="form-subtitle">Ingresa tus datos para continuar de manera segura</p>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="cedula" class="form-label">
+                        <i class="fas fa-id-card input-icon"></i>
+                        Número de Cédula
+                    </label>
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        id="cedula" 
+                        name="cedula" 
+                        placeholder="Ej: 100654321"
+                        pattern="[0-9]+"
+                        maxlength="15"
+                        required
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="fecha_expedicion" class="form-label">
+                        <i class="fas fa-calendar-alt input-icon"></i>
+                        Fecha de Expedición
+                    </label>
+                    <input 
+                        type="date" 
+                        class="form-control" 
+                        id="fecha_expedicion" 
+                        name="fecha_expedicion" 
+                        required
+                        max="{{ today|date:'Y-m-d' }}"
+                    >
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-arrow-right me-2"></i>
+                    Continuar
+                </button>
+
+                <div class="security-badge">
+                    <i class="fas fa-shield-alt text-center"></i>
+                    <span>Validación y Protección de Datos</span>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Mejorar la experiencia del usuario
+        document.addEventListener('DOMContentLoaded', function() {
+            // Formatear número de cédula mientras se escribe
+            const cedulaInput = document.getElementById('cedula');
+            cedulaInput.addEventListener('input', function(e) {
+                // Solo permitir números
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+
+            // Validación básica del formulario
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function(e) {
+                const cedula = cedulaInput.value;
+                const fecha = document.getElementById('fecha_expedicion').value;
+
+                if (cedula.length < 6) {
+                    e.preventDefault();
+                    alert('Por favor, ingresa un número de cédula válido');
+                    cedulaInput.focus();
+                    return;
+                }
+
+                if (!fecha) {
+                    e.preventDefault();
+                    alert('Por favor, selecciona la fecha de expedición');
+                    document.getElementById('fecha_expedicion').focus();
+                    return;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

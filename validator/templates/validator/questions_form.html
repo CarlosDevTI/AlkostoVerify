@@ -1,0 +1,159 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validación de Identidad - Preguntas</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/question_form.css' %}">
+</head>
+<body>
+    <div class="main-container">
+        <div class="validation-card">
+            <div class="header-section">
+                <img src="{% static 'img/logo.png' %}" alt="Logo de la empresa" class="header-logo">
+                <!-- Mostrar Nombre y Cédula -->
+                <div class="alert alert-info">
+                    <h1 class="form-title">Preguntas de Validación para:</h1>
+                    <div class="user-info-badge">
+                        <i class="fas fa-user"></i>
+                        <span>Nombre: <strong>{{ user_info.nombre }}</strong></span>
+                        <i class="fas fa-id-card"></i>
+                        <span>Cédula: <strong>{{ user_info.cedula }}</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <form method="post" id="validationForm">
+                {% csrf_token %}
+                
+                <div class="progress-indicator">
+                    <div class="progress-bar" id="progressBar" style="width: 0%;"></div>
+                </div>
+
+                <div class="questions-grid">
+                    {% for pregunta in preguntas %}
+                        <div class="question-container" data-question="{{ forloop.counter0 }}">
+                            <div class="question-number">{{ forloop.counter }}</div>
+                            <div class="question-text">{{ pregunta.texto }}</div>
+                            
+                            <div class="options-container">
+                                {% for opcion in pregunta.opciones %}
+                                    <div class="form-check">
+                                        <input 
+                                            class="form-check-input" 
+                                            type="radio" 
+                                            name="question_{{ forloop.parentloop.counter0 }}" 
+                                            id="question_{{ forloop.parentloop.counter0 }}_opcion_{{ forloop.counter0 }}" 
+                                            value="{{ opcion }}" 
+                                            required
+                                            onchange="updateProgress()"
+                                        >
+                                        <label 
+                                            class="form-check-label" 
+                                            for="question_{{ forloop.parentloop.counter0 }}_opcion_{{ forloop.counter0 }}"
+                                        >
+                                            {{ opcion }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    <i class="fas fa-shield-check me-2"></i>
+                    Validar Respuestas
+                </button>
+
+                {% comment %} <div class="security-notice">
+                    <i class="fas fa-lock"></i>
+                    <span>Todas las respuestas están protegidas y se procesan de forma segura</span>
+                </div> {% endcomment %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('validationForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const progressBar = document.getElementById('progressBar');
+            const totalQuestions = document.querySelectorAll('.question-container').length;
+
+            // Función para actualizar la barra de progreso
+            window.updateProgress = function() {
+                const answeredQuestions = document.querySelectorAll('input[type="radio"]:checked').length;
+                const progress = (answeredQuestions / totalQuestions) * 100;
+                progressBar.style.width = progress + '%';
+                
+                // Habilitar/deshabilitar botón submit
+                if (answeredQuestions === totalQuestions) {
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                } else {
+                    submitBtn.disabled = true;
+                    submitBtn.style.opacity = '0.6';
+                }
+            };
+
+            // Inicializar estado del botón
+            updateProgress();
+
+            // Efecto de loading en el botón submit
+            form.addEventListener('submit', function(e) {
+                submitBtn.classList.add('loading');
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Validando...';
+            });
+
+            // Smooth scroll al hacer click en una opción (simplificado para layout de grid)
+            const radioInputs = document.querySelectorAll('input[type="radio"]');
+            radioInputs.forEach((input) => {
+                input.addEventListener('change', function() {
+                    // Verificar si todas las preguntas están respondidas
+                    const answeredQuestions = document.querySelectorAll('input[type="radio"]:checked').length;
+                    if (answeredQuestions === totalQuestions) {
+                        // Scroll suave al botón de submit cuando todas estén respondidas
+                        setTimeout(() => {
+                            submitBtn.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'center' 
+                            });
+                        }, 300);
+                    }
+                });
+            });
+
+            // Validación adicional antes del envío
+            form.addEventListener('submit', function(e) {
+                const answeredQuestions = document.querySelectorAll('input[type="radio"]:checked').length;
+                
+                if (answeredQuestions !== totalQuestions) {
+                    e.preventDefault();
+                    alert('Por favor, responde todas las preguntas antes de continuar.');
+                    
+                    // Encontrar la primera pregunta sin responder
+                    const firstUnanswered = document.querySelector('.question-container:not(:has(input:checked))');
+                    if (firstUnanswered) {
+                        firstUnanswered.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'center' 
+                        });
+                        firstUnanswered.style.borderColor = '#ef4444';
+                        setTimeout(() => {
+                            firstUnanswered.style.borderColor = '';
+                        }, 3000);
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
