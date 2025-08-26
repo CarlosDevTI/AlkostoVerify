@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
 import random
 import logging
-import csv
+import openpyxl
+from openpyxl.utils import get_column_letter
 from django.http import HttpResponse
 
 from .oracle_service import get_user_data
@@ -9,11 +10,11 @@ from .models import ValidationRecord
 
 logger = logging.getLogger(__name__)
 
-# --- Datos Falsos para Generar Opciones ---
+#! --- Datos Falsos para Generar Opciones ---
 DUMMY_DATA = {
     'ciudad_exp': ['Bogotá D.C.', 'Medellín', 'Cali', 'Barranquilla', 'Cartagena', 'Soacha', 'Cúcuta', 'Ibagué', 'Bucaramanga', 'Pereira'],
     'tipocredito': ['Libre Inversión', 'Hipotecario', 'Vehículo', 'Educativo', 'Microcrédito', 'Tarjeta de Crédito'],
-    'direccion': ['Calle Falsa 123', 'Avenida Siempre Viva 742', 'Carrera 10 # 20-30', 'Diagonal 45 # 15-50'],
+    'direccion': ['Calle 42 # 15 - 24', 'Avenida 40 # 27 -42', 'Carrera 10 # 20-30', 'Diagonal 7 # 15-50'],
     'email_domain': ['hotmail.com', 'outlook.com', 'yahoo.com', 'icloud.com', 'aol.com']
 }
 
@@ -215,3 +216,86 @@ def vista_preguntas(request):
         'preguntas': questions,
         'user_info': user_info
     })
+
+def export_records(request):
+    """
+    Exportar los datos de ValidationRecord a un archivo XLSX, expandiendo los campos JSON en columnas separadas.
+    """
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = 'attachment; filename="registros_validacion.xlsx"'
+
+    workbook = openpyxl.Workbook()
+    worksheet = workbook.active
+    worksheet.title = 'Registros'
+
+    #? --- Creacion Dinámica de Encabezados ---
+    
+    #? Obtener todos los registros primero para determinar todas las claves JSON posibles 
+    records = ValidationRecord.objects.all()
+    
+    #? Encabezados fijos
+    headers = [
+        'ID', 'Cédula', 'Fecha de Expedición', 'Validación Exitosa', 'Fecha y Hora'
+    ]
+    
+    #? Encontrar dinamicamente todas las claves de los campos JSON
+    info_keys = set()
+    answer_keys = set()
+    
+    for record in records:
+        if isinstance(record.user_info, dict):
+            info_keys.update(record.user_info.keys())
+        if isinstance(record.user_answers, dict):
+            answer_keys.update(record.user_answers.keys())
+
+    #? Crear encabezados ordenados y con prefijos para mayor claridad
+
+    sorted_info_keys = sorted(list(info_keys))
+    sorted_answer_keys = sorted(list(answer_keys))
+    
+    headers.extend([f"Info: {key}" for key in sorted_info_keys])
+    headers.extend([f"Respuesta: {key}" for key in sorted_answer_keys])
+    
+    #? Escribir encabezados en la primera fila
+    worksheet.append(headers)
+
+    #? --- Escribir los datos de cada registro ---
+    
+    for record in records:
+        row_data = [
+            record.id,
+            record.cedula,
+            record.fecha_expedicion,
+            "Sí" if record.validation_success else "No",
+            record.timestamp.strftime("%Y-%m-%d %H:%M:%S") if record.timestamp else ""
+        ]
+        
+        #? Añadir datos de user_info, asegurando que el orden coincida con los encabezados
+        user_info = record.user_info if isinstance(record.user_info, dict) else {}
+        for key in sorted_info_keys:
+            row_data.append(user_info.get(key, ''))
+            
+        #? Añadir datos de user_answers, asegurando que el orden coincida con los encabezados
+        user_answers = record.user_answers if isinstance(record.user_answers, dict) else {}
+        for key in sorted_answer_keys:
+            row_data.append(user_answers.get(key, ''))
+            
+        worksheet.append(row_data)
+
+    #? Autoajustar el ancho de las columnas para mejor legibilidad
+    for i, column_cells in enumerate(worksheet.columns):
+        max_length = 0
+        column = get_column_letter(i + 1)
+        for cell in column_cells:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(cell.value)
+            except:
+                pass
+        adjusted_width = (max_length + 2)
+        worksheet.column_dimensions[column].width = adjusted_width
+
+    workbook.save(response)
+    return response
