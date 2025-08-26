@@ -4,7 +4,7 @@ cryptography
 Django
 gunicorn
 mysqlclient
-oracledb
+
 openpyxl
 sqlparse
 tzdata
