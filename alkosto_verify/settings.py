@@ -26,8 +26,15 @@ SECRET_KEY = 'django-insecure-j18eu1gl)a7tlf=ypd@v^fau%v3gyxk884v(#uqr(o$l1v1hr3
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
 
+# En settings.py
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
+# Configuración para producción
+if os.environ.get('DJANGO_DEBUG', 'True') == 'False':
+    DEBUG = False
+    SECURE_SSL_REDIRECT = False  # Cambia a True si usas HTTPS
+    SESSION_COOKIE_SECURE = False  # Cambia a True si usas HTTPS
+    CSRF_COOKIE_SECURE = False  # Cambia a True si usas HTTPS
 
 # Application definition
 
@@ -114,20 +121,14 @@ else:
         }
     }
 
-# --- MySQL Configuration (for Docker) ---
-#
-# DATABASES['default'] = {
-#     'ENGINE': 'django.db.backends.mysql',
-#     'NAME': os.environ.get('MYSQL_DATABASE'),
-#     'USER': os.environ.get('MYSQL_USER'),
-#     'PASSWORD': os.environ.get('MYSQL_PASSWORD'),
-#     'HOST': os.environ.get('MYSQL_HOST', 'db'),  # 'db' is the service name in docker-compose
-#     'PORT': os.environ.get('MYSQL_PORT', '3306'),
-#     'OPTIONS': {
-#         'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-#     },
-# }
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.1/howto/static-files/
+import os
 
+# Static files (CSS, JavaScript, Images)
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # <- AÑADE ESTA LÍNEA
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -159,16 +160,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
-import os
-
-# Static files (CSS, JavaScript, Images)
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # <- AÑADE ESTA LÍNEA
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
