@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     default-libmysqlclient-dev \
     gcc \
     pkg-config \
-    mysql-client \
+    mariadb-client-compat \
     curl \
     netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
