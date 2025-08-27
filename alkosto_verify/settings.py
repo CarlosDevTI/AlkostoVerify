@@ -75,20 +75,44 @@ WSGI_APPLICATION = 'alkosto_verify.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    },
-    'oracle': {
-        'ENGINE': 'django.db.backends.oracle',
-        'NAME': 'LINIX',
-        'USER': 'L2K',
-        'PASSWORD': 'L2K',
-        'HOST': '192.168.15.145',
-        'PORT': '1521',
+if os.environ.get('DOCKER_CONTAINER', False):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('MYSQL_DATABASE', 'alkosto_verify_db'),
+            'USER': os.environ.get('MYSQL_USER', 'alkosto_user'),
+            'PASSWORD': os.environ.get('MYSQL_PASSWORD', 'alkosto_password'),
+            'HOST': os.environ.get('MYSQL_HOST', 'db'),
+            'PORT': os.environ.get('MYSQL_PORT', '3306'),
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                'charset': 'utf8mb4',
+            },
+        },
+        'oracle': {
+            'ENGINE': 'django.db.backends.oracle',
+            'NAME': 'LINIX',
+            'USER': 'L2K',
+            'PASSWORD': 'L2K',
+            'HOST': '192.168.15.145',
+            'PORT': '1521',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        },
+        'oracle': {
+            'ENGINE': 'django.db.backends.oracle',
+            'NAME': 'LINIX',
+            'USER': 'L2K',
+            'PASSWORD': 'L2K',
+            'HOST': '192.168.15.145',
+            'PORT': '1521',
+        }
+    }
 
 # --- MySQL Configuration (for Docker) ---
 #
@@ -141,8 +165,10 @@ USE_TZ = True
 
 import os
 
+# Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # <- AÑADE ESTA LÍNEA
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

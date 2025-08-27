@@ -3,20 +3,25 @@ version: '3.8'
 services:
   web:
     build: .
-    command: gunicorn --bind 0.0.0.0:8006 alkosto_verify.wsgi:application
+    command: >
+      sh -c "python manage.py collectstatic --noinput &&
+             python manage.py migrate &&
+             gunicorn --bind 0.0.0.0:8006 alkosto_verify.wsgi:application"
     volumes:
       - .:/app
+      - static_volume:/app/staticfiles
     ports:
-      - "8006:8006"  # Ahora ambos son 8006 (host:container)
+      - "8006:8006"
     environment:
       - DJANGO_DEBUG=False
-      - ALLOWED_HOSTS=192.168.15.215,localhost,127.0.0.1
+      - ALLOWED_HOSTS=192.168.15.215,localhost,127.0.0.1,0.0.0.0
       - MYSQL_DATABASE=alkosto_verify_db
       - MYSQL_USER=alkosto_user
       - MYSQL_PASSWORD=alkosto_password
       - MYSQL_HOST=db
       - MYSQL_PORT=3306
       - DJANGO_SETTINGS_MODULE=alkosto_verify.settings
+      - DOCKER_CONTAINER=True  # <- AÑADE ESTA VARIABLE
     depends_on:
       - db
 
@@ -29,8 +34,11 @@ services:
       - MYSQL_DATABASE=alkosto_verify_db
       - MYSQL_USER=alkosto_user
       - MYSQL_PASSWORD=alkosto_password
+      - MYSQL_ROOT_HOST=%
     ports:
       - "3307:3306"
+    command: --default-authentication-plugin=mysql_native_password
 
 volumes:
   mysql_data:
+  static_volume:
