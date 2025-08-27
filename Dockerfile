@@ -14,9 +14,9 @@ RUN apt-get update && apt-get install -y \
     default-libmysqlclient-dev \
     gcc \
     pkg-config \
-    mariadb-client \
+    mysql-client \
     curl \
-    netcat-traditional \
+    netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file and install dependencies

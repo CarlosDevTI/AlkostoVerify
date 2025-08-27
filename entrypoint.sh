@@ -7,27 +7,18 @@ set -e
 wait_for_mysql() {
     echo "Waiting for MySQL at db:3306..."
     
-    # Usar un método más confiable para verificar MySQL
-    until python -c "
-import pymysql
-import time
-import os
-try:
-    conn = pymysql.connect(
-        host='db',
-        user=os.environ.get('MYSQL_USER', 'alkosto_user'),
-        password=os.environ.get('MYSQL_PASSWORD', 'alkosto_password'),
-        database=os.environ.get('MYSQL_DATABASE', 'alkosto_verify_db'),
-        port=3306
-    )
-    conn.close()
-    print('MySQL is ready!')
-except Exception as e:
-    print(f'MySQL not ready: {e}')
-    exit(1)
-"; do
+    # Usar netcat para verificar que el puerto esté abierto
+    while ! nc -z db 3306; do
         echo "MySQL is unavailable - sleeping for 3 seconds"
         sleep 3
+    done
+    
+    echo "MySQL port is open, waiting for service to be ready..."
+    
+    # Ahora verificar que MySQL esté completamente listo
+    while ! mysqladmin ping -h"db" -u"${MYSQL_USER:-alkosto_user}" -p"${MYSQL_PASSWORD:-alkosto_password}" --silent; do
+        echo "MySQL service not ready - sleeping for 2 seconds"
+        sleep 2
     done
 }
 
@@ -45,15 +36,7 @@ python manage.py collectstatic --noinput --clear
 
 # Aplicar migraciones
 echo "Applying database migrations..."
-python manage.py migrate
-
-# Crear superusuario (opcional)
-# python manage.py shell -c "
-# from django.contrib.auth import get_user_model
-# User = get_user_model()
-# if not User.objects.filter(username='admin').exists():
-#     User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
-# "
+python manage.py migrate --run-syncdb
 
 echo "Starting application..."
 # Ejecutar el comando principal (Gunicorn)
