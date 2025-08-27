@@ -3,13 +3,8 @@ version: '3.8'
 services:
   web:
     build: .
-    command: >
-      sh -c "python manage.py collectstatic --noinput &&
-             python manage.py migrate &&
-             gunicorn --bind 0.0.0.0:8006 alkosto_verify.wsgi:application"
     volumes:
       - .:/app
-      - static_volume:/app/staticfiles
     ports:
       - "8006:8006"
     environment:
@@ -21,9 +16,10 @@ services:
       - MYSQL_HOST=db
       - MYSQL_PORT=3306
       - DJANGO_SETTINGS_MODULE=alkosto_verify.settings
-      - DOCKER_CONTAINER=True  # <- AÑADE ESTA VARIABLE
+      - DOCKER_CONTAINER=True
     depends_on:
       - db
+    restart: on-failure
 
   db:
     image: mysql:8.0
@@ -38,7 +34,11 @@ services:
     ports:
       - "3307:3306"
     command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "alkosto_user", "-palkosto_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   mysql_data:
-  static_volume:
