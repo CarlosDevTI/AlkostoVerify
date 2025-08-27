@@ -1,15 +1,13 @@
 #!/bin/bash
 # wait-for-db.sh
 
-set -e
-
 host="$1"
 shift
 cmd="$@"
 
-echo "Waiting for MySQL at $host..."
+echo "Waiting for MySQL at $host:3306..."
 
-while ! mysqladmin ping -h"$host" -u"alkosto_user" -p"alkosto_password" --silent; do
+while ! nc -z $host 3306; do
     echo "MySQL is unavailable - sleeping"
     sleep 2
 done
