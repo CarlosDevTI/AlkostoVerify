@@ -8,12 +8,11 @@ ENV PYTHONUNBUFFERED 1
 # Set the working directory in the container
 WORKDIR /app
 
-# Install system dependencies required for mysqlclient and wait-for-it
+# Install system dependencies required for mysqlclient
 RUN apt-get update && apt-get install -y \
     default-libmysqlclient-dev \
     gcc \
     pkg-config \
-    netcat \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file and install dependencies
@@ -23,12 +22,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code
 COPY . .
 
-# Expose the port the app runs on
-EXPOSE 8000
+# Expose the port the app runs on (cambiamos a 8006 interno)
+EXPOSE 8006
 
-# Add wait-for-it script (crearemos este script)
-COPY wait-for-it.sh /wait-for-it.sh
-RUN chmod +x /wait-for-it.sh
-
-# Run the application
-CMD ["/wait-for-it.sh", "db:3306", "--", "gunicorn", "--bind", "0.0.0.0:8000", "alkosto_verify.wsgi:application"]
+# Run the application (cambiamos a puerto 8006)
+CMD ["gunicorn", "--bind", "0.0.0.0:8006", "alkosto_verify.wsgi:application"]
