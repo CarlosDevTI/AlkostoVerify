@@ -11,26 +11,18 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-import os
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-j18eu1gl)a7tlf=ypd@v^fau%v3gyxk884v(#uqr(o$l1v1hr3'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True') != 'False'
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-# Configuración para producción
-SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'False') == 'True'
-SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False') == 'True'
-CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'False') == 'True'
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost').split(',')
 
 # Application definition
 
@@ -78,27 +70,15 @@ WSGI_APPLICATION = 'alkosto_verify.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-if os.environ.get('DOCKER_CONTAINER', False):
+if config('ENVIRONMENT', default='local') == 'production':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.environ.get('MYSQL_DATABASE', 'alkosto_verify_db'),
-            'USER': os.environ.get('MYSQL_USER', 'alkosto_user'),
-            'PASSWORD': os.environ.get('MYSQL_PASSWORD', 'alkosto_password'),
-            'HOST': os.environ.get('MYSQL_HOST', 'db'),
-            'PORT': os.environ.get('MYSQL_PORT', '3306'),
-            'OPTIONS': {
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-                'charset': 'utf8mb4',
-            },
-        },
-        'oracle': {
-            'ENGINE': 'django.db.backends.oracle',
-            'NAME': 'LINIX',
-            'USER': 'L2K',
-            'PASSWORD': 'L2K',
-            'HOST': '192.168.15.145',
-            'PORT': '1521',
+            'NAME': config('DB_NAME'),
+            'USER': config('DB_USER'),
+            'PASSWORD': config('DB_PASSWORD'),
+            'HOST': config('DB_HOST', default='db'),
+            'PORT': config('DB_PORT', default='3306'),
         }
     }
 else:
@@ -106,25 +86,19 @@ else:
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
-        },
-        'oracle': {
-            'ENGINE': 'django.db.backends.oracle',
-            'NAME': 'LINIX',
-            'USER': 'L2K',
-            'PASSWORD': 'L2K',
-            'HOST': '192.168.15.145',
-            'PORT': '1521',
         }
     }
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-import os
+# Add Oracle DB regardless of environment
+DATABASES['oracle'] = {
+    'ENGINE': 'django.db.backends.oracle',
+    'NAME': 'LINIX',
+    'USER': 'L2K',
+    'PASSWORD': 'L2K',
+    'HOST': '192.168.15.145',
+    'PORT': '1521',
+}
 
-# Static files (CSS, JavaScript, Images)
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # <- AÑADE ESTA LÍNEA
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -156,6 +130,15 @@ USE_I18N = True
 
 USE_TZ = True
 
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.1/howto/static-files/
+
+import os
+
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

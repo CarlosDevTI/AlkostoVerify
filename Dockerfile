@@ -1,41 +1,29 @@
-# Start from a Python base image
+#* VERSION SLIM DE PYTHON => ES MAS LIGERA PARA PRODUCION
 FROM python:3.11-slim
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-ENV DOCKER_CONTAINER=True
+#* EVITAR QUE PYTHON GENERE ARCHIVOS .pyc Y BUFER EN LA SALIDA
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
-# Set the working directory in the container
+#* ESTABLECER EL DIRECTORIO DE TRABAJO DENTRO DEL CONTENEDOR
 WORKDIR /app
 
-# Install system dependencies required for mysqlclient and other packages
-RUN apt-get update && apt-get install -y \
-    default-libmysqlclient-dev \
-    gcc \
+#* AHORA SI INSTALAR LAS DEPENDENCIAS DEL SISTEMA
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
     pkg-config \
-    mariadb-client-compat \
-    curl \
-    netcat-openbsd \
+    default-libmysqlclient-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the requirements file and install dependencies
+#* COPIAR E INSTALAR LAS DEPENDENCIAS DE PYTHON 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code
+#* COPIAR TODO EL CODIGO DEL PROYECTO AL DIRECTORIO DE TRABAJO
 COPY . .
 
-# Create directory for static files
-RUN mkdir -p /app/staticfiles
-
-# Copy and make entrypoint script executable
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-# Expose the port the app runs on
+#* EXPONER EL PUERTO 8006 PARA QUE SEA ACCESIBLE DESDE AFUERA DEL CONTENDOR
 EXPOSE 8006
 
-# Use entrypoint script
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["gunicorn", "--bind", "0.0.0.0:8006", "--workers", "3", "--timeout", "120", "alkosto_verify.wsgi:application"]
+#* COMANDO POR DEFECTO
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8006"]
