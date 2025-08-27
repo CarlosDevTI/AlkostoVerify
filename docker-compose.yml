@@ -3,6 +3,7 @@ version: '3.8'
 services:
   web:
     build: .
+    command: gunicorn --bind 0.0.0.0:8006 alkosto_verify.wsgi:application
     volumes:
       - .:/app
     ports:
@@ -19,7 +20,7 @@ services:
       - DOCKER_CONTAINER=True
     depends_on:
       - db
-    restart: on-failure
+    restart: unless-stopped
 
   db:
     image: mysql:8.0
@@ -34,11 +35,7 @@ services:
     ports:
       - "3307:3306"
     command: --default-authentication-plugin=mysql_native_password
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "alkosto_user", "-palkosto_password"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    restart: unless-stopped
 
 volumes:
   mysql_data:
