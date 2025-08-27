@@ -24,17 +24,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-j18eu1gl)a7tlf=ypd@v^fau%v3gyxk884v(#uqr(o$l1v1hr3'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
-
-# En settings.py
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') != 'False'
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # Configuración para producción
-if os.environ.get('DJANGO_DEBUG', 'True') == 'False':
-    DEBUG = False
-    SECURE_SSL_REDIRECT = False  # Cambia a True si usas HTTPS
-    SESSION_COOKIE_SECURE = False  # Cambia a True si usas HTTPS
-    CSRF_COOKIE_SECURE = False  # Cambia a True si usas HTTPS
+SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'False') == 'True'
+SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False') == 'True'
+CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'False') == 'True'
 
 # Application definition
 
