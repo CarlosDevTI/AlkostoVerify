@@ -16,7 +16,7 @@ wait_for_mysql() {
     echo "MySQL port is open, waiting for service to be ready..."
     
     # Ahora verificar que MySQL esté completamente listo
-    while ! mysqladmin ping -h"db" -u"${MYSQL_USER:-alkosto_user}" -p"${MYSQL_PASSWORD:-alkosto_password}" --silent; do
+    while ! mysqladmin ping -h"db" --connect-timeout=2 -u"${MYSQL_USER:-alkosto_user}" -p"${MYSQL_PASSWORD:-alkosto_password}" --silent; do
         echo "MySQL service not ready - sleeping for 2 seconds"
         sleep 2
     done
