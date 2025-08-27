@@ -97,7 +97,7 @@ DATABASES['oracle'] = {
     'PASSWORD': 'L2K',
     'HOST': '192.168.15.145',
     'PORT': '1521',
-}
+} 
 
 
 # Password validation

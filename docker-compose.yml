@@ -24,5 +24,6 @@ services:
     ports:
       - "3307:3306"
 
+
 volumes:
   mysql_data:
