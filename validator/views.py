@@ -7,14 +7,15 @@ from django.http import HttpResponse
 
 from .oracle_service import get_user_data
 from .models import ValidationRecord
+from .email_service import EmailService
 
 logger = logging.getLogger(__name__)
 
 #! --- Datos Falsos para Generar Opciones ---
 DUMMY_DATA = {
-    'ciudad_exp': ['Bogotá D.C.', 'Medellín', 'Cali', 'Barranquilla', 'Cartagena', 'Soacha', 'Cúcuta', 'Ibagué', 'Bucaramanga', 'Pereira'],
+    'ciudad_exp': ['Bogotá D.C.', 'Medellín', 'Cali', 'Barranquilla', 'Cartagena', 'Soacha', 'Cúcuta', 'Ibagué', 'Bucaramanga', 'Pereira', 'Restrepo'],
     'tipocredito': ['Libre Inversión', 'Hipotecario', 'Vehículo', 'Educativo', 'Microcrédito', 'Tarjeta de Crédito'],
-    'direccion': ['Calle 42 # 15 - 24', 'Avenida 40 # 27 -42', 'Carrera 10 # 20-30', 'Diagonal 7 # 15-50'],
+    'direccion': ['Calle 42 # 15 - 24', 'Avenida 40 # 27 -42', 'Carrera 10 # 20-30', 'Diagonal 7 # 15-50', 'Transversal 5 # 30-10', 'Calle 27 # 10-20 apto 101', 'Carrera 15# 40-15 torre 3', 'Carrera 30 # 10-05'],
     'email_domain': ['hotmail.com', 'outlook.com', 'yahoo.com', 'icloud.com', 'aol.com']
 }
 
@@ -129,16 +130,30 @@ def vista_validacion(request):
         if not cedula or not fecha_expedicion:
             return render(request, 'validator/initial_form.html', {'error_message': 'Por favor, complete ambos campos.'})
 
+        # --- INICIO: Verificación de intentos ---
+        previous_attempts = ValidationRecord.objects.filter(cedula=cedula).count()
+        if previous_attempts >= 2:
+            return render(request, 'validator/initial_form.html', {
+                'error_message': 'Ha superado el número máximo de intentos de validación (2) para esta cédula.'
+            })
+        # --- FIN: Verificación de intentos ---
+
         fecha_expedicion_oracle = fecha_expedicion.replace('-', '/')
         print("fecha formateada ",fecha_expedicion_oracle)
         user_data = get_user_data(cedula, fecha_expedicion_oracle)
-
+        print("user_data:", user_data)
         if user_data:
             questions = generador_preguntas(user_data)
+            monto_aprobado = user_data.get('monto_aprobado')
             user_info = {
                 'nombre': user_data.get('nombre'),
-                'cedula': user_data.get('cedula')
+                'cedula': user_data.get('cedula'),
+                'mail': user_data.get('mail'),
+                'fecha_expedicion': fecha_expedicion,
+                'telefono': user_data.get('telefono'),
+                'monto_aprobado': monto_aprobado
             }
+            print("Monto Aprobado:", monto_aprobado)
 
             validation_record = ValidationRecord.objects.create(
                 cedula=cedula,
@@ -150,6 +165,7 @@ def vista_validacion(request):
             request.session['validation_questions'] = questions
             request.session['user_info'] = user_info
             request.session['validation_record_id'] = validation_record.id
+            request.session['monto_aprobado'] = monto_aprobado
             return redirect('titularidad')
         else:
             return render(request, 'validator/initial_form.html', {
@@ -162,6 +178,7 @@ def vista_preguntas(request):
     questions = request.session.get('validation_questions')
     user_info = request.session.get('user_info')
     validation_record_id = request.session.get('validation_record_id')
+    monto_aprobado = request.session.get('monto_aprobado')
 
     if not questions or not user_info or not validation_record_id:
         return redirect('initial_form')
@@ -175,25 +192,25 @@ def vista_preguntas(request):
             user_answers[q['nombre']] = user_answer
 
             # --- Bloque de Depuración ---
-            print(f"\n[ Pregunta: {q['nombre']} ]")
-            print(f"  -> Tu respuesta: '{user_answer}' (Tipo: {type(user_answer)})")
+            # print(f"\n[ Pregunta: {q['nombre']} ]")
+            # print(f"  -> Tu respuesta: '{user_answer}' (Tipo: {type(user_answer)})")
             correct_answer = str(q['correctas'])
-            print(f"  -> Respuesta correcta: '{correct_answer}' (Tipo: {type(correct_answer)})")
+            # print(f"  -> Respuesta correcta: '{correct_answer}' (Tipo: {type(correct_answer)})")
 
             cleaned_user_answer = user_answer.lower().strip() if user_answer else None
             cleaned_correct_answer = correct_answer.lower().strip()
 
-            print(f"  -> Comparando: '{cleaned_user_answer}' == '{cleaned_correct_answer}'")
+            # print(f"  -> Comparando: '{cleaned_user_answer}' == '{cleaned_correct_answer}'")
             
             is_correct = cleaned_user_answer is not None and cleaned_user_answer == cleaned_correct_answer
             
-            print(f"  -> Resultado: {'CORRECTO' if is_correct else 'INCORRECTO'}")
+            # print(f"  -> Resultado: {'CORRECTO' if is_correct else 'INCORRECTO'}")
             # --- Fin Bloque de Depuración ---
 
             if is_correct:
                 correct_answers_count += 1
         
-        validation_success = correct_answers_count >= 3
+        validation_success = correct_answers_count >= 4
         print(f"\n--- FIN DE VALIDACIÓN ---")
         print(f"Total de respuestas correctas: {correct_answers_count} de {len(questions)}")
         print(f"Resultado final de la validación: {'ÉXITO' if validation_success else 'FALLIDA'}\n")
@@ -205,10 +222,30 @@ def vista_preguntas(request):
             validation_record.save()
         except ValidationRecord.DoesNotExist:
             pass
+
+        # --- INICIO: Lógica de envío de correos ---
+        correct_answers_dict = {q['texto']: q['correctas'] for q in questions}
+
+        if validation_success:
+            try:
+                EmailService.send_approval_emails(
+                    user_info=user_info,
+                    user_answers=correct_answers_dict,
+                    monto_aprobado=monto_aprobado
+                )
+            except Exception as e:
+                logger.error(f"Error al invocar el servicio de correos de APROBACIÓN: {e}")
+        else:
+            try:
+                EmailService.send_rejection_emails(user_info=user_info)
+            except Exception as e:
+                logger.error(f"Error al invocar el servicio de correos de RECHAZO: {e}")
+        # --- FIN: Lógica de envío de correos ---
         
         request.session.pop('validation_questions', None)
         request.session.pop('user_info', None)
         request.session.pop('validation_record_id', None)
+        request.session.pop('monto_aprobado', None)
 
         return render(request, 'validator/result.html', {'validation_success': validation_success})
 
@@ -291,7 +328,7 @@ def export_records(request):
         for cell in column_cells:
             try:
                 if len(str(cell.value)) > max_length:
-                    max_length = len(cell.value)
+                    max_length = len(str(cell.value))
             except:
                 pass
         adjusted_width = (max_length + 2)

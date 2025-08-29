@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validación Aprobada</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .header .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .success-badge {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            margin-bottom: 20px;
+        }
+        .user-info {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .user-info h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .label {
+            font-weight: bold;
+            color: #6c757d;
+        }
+        .value {
+            color: #495057;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>¡Validación Exitosa! - CONGENTE </h1>
+            <p>Su titularidad ha sido confirmada</p>
+        </div>
+        
+        <div class="content">
+            <div class="success-badge">
+                <strong>¡Felicitaciones!</strong> Su validación de titularidad ha sido aprobada exitosamente.
+            </div>
+            
+            <p>Estimado(a) <strong>{{ nombre }}</strong>,</p>
+            
+            <p>Le informamos que su proceso de validación de titularidad ha sido completado satisfactoriamente. Sus respuestas coinciden con la información registrada en nuestro sistema.</p>
+            
+            <div class="user-info">
+                <h3>Información de Validación</h3>
+                <div class="info-row">
+                    <span class="label">Nombre: </span>
+                    <span class="value">{{ nombre }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Cédula: </span>
+                    <span class="value">{{ cedula }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Fecha de Expedición: </span>
+                    <span class="value">{{ fecha|default:"Hoy" }}</span>
+                </div>
+            </div>
+            
+            <p>Si usted no realizó esta validación, comuníquese de inmediato con nuestras oficinas a través de los canales oficiales.</p>
+            
+            <p><strong>Gracias por confiar en Congente.</strong></p>
+        </div>
+        
+        <div class="footer">
+            <p>Este es un mensaje automático del sistema de validación de Congente.<br>
+            Por favor, no responda a este correo electrónico.</p>
+            <p><small>Cooperativa Ahorro y Crédito Congente - Todos los derechos reservados</small></p>
+        </div>
+    </div>
+</body>
+</html>

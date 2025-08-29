@@ -54,9 +54,10 @@
             {% if validation_success %}
                 <i class="bi bi-check-circle-fill success-icon"></i> <!-- Placeholder for checkmark icon -->
                 <p class="lead mt-3">Validación exitosa: la titularidad fue demostrada.</p>
+                <p class="lead mt-3">Se le enviará un correo de confirmación al asociado</p>
             {% else %}
                 <i class="bi bi-x-circle-fill error-icon"></i> <!-- Placeholder for X icon -->
-                <p class="lead mt-3">Validación fallida: los datos no coinciden con nuestros registros. Titularidad no validada</p>
+                <p class="lead mt-3">Validación fallida: los datos no coinciden con nuestros registros. El asociado deberá acercarse a la oficina mas cercana para su validación de identidad.</p>
             {% endif %}
             <div class="d-grid mt-4">
                 <a href="{% url 'initial_form' %}" class="btn btn-primary">Volver a Intentar</a>

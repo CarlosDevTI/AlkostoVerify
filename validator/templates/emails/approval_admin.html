@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validación Aprobada - Reporte Administrativo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+        .header .icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .alert {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            margin-bottom: 25px;
+        }
+        .user-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .info-card {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .info-card h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #495057;
+            font-size: 16px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 8px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .label {
+            font-weight: bold;
+            color: #6c757d;
+            flex: 1;
+        }
+        .value {
+            color: #495057;
+            flex: 2;
+            text-align: right;
+        }
+        .monto-section {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        .monto-title {
+            color: #856404;
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .monto-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #856404;
+        }
+        .answers-section {
+            margin-top: 25px;
+        }
+        .answers-section h3 {
+            color: #495057;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .answer-item {
+            background-color: #e3f2fd;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            border-left: 3px solid #2196f3;
+        }
+        .answer-label {
+            font-weight: bold;
+            color: #1565c0;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .answer-value {
+            color: #424242;
+            font-size: 14px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .timestamp {
+            text-align: right;
+            color: #6c757d;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+        @media (max-width: 600px) {
+            .user-summary {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Validación de Titularidad Aprobada</h1>
+            <p>Reporte de Validación Exitosa</p>
+        </div>
+        
+        <div class="content">
+            <div class="alert">
+                <strong>Validación Exitosa:</strong> El asociado ha completado satisfactoriamente el proceso de validación de titularidad.
+            </div>
+            
+            <div class="user-summary">
+                <div class="info-card">
+                    <h3>👤 Datos del Asociado</h3>
+                    <div class="info-row">
+                        <span class="label">Nombre:</span>
+                        <span class="value">{{ nombre }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Cédula:</span>
+                        <span class="value">{{ cedula }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Email:</span>
+                        <span class="value">{{ email_usuario }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Fecha Exp:</span>
+                        <span class="value">{{ fecha_expedicion }}</span>
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <h3>📊 Resultado de Validación</h3>
+                    <div class="info-row">
+                        <span class="label">Estado:</span>
+                        <span class="value" style="color: #28a745; font-weight: bold;">APROBADO</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Preguntas:</span>
+                        <span class="value">{{ user_answers|length }} respondidas</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Correctas:</span>
+                        <span class="value">Mínimo 4 de {{ user_answers|length }}</span>
+                    </div>
+                    {% if telefono_opcional %}
+                    <div class="info-row">
+                        <span class="label">Teléfono Opcional:</span>
+                        <span class="value">{{ telefono_opcional }}</span>
+                    </div>
+                    {% endif %}
+                    {% if monto_aprobado %}
+                    <div class="info-row">
+                        <span class="label">Monto Aprobado:</span>
+                        <span class="value">${{ monto_aprobado|floatformat:0|default:"No especificado" }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if user_answers %}
+            <div class="answers-section">
+                <h3>📋 Respuestas Validadas del Asociado</h3>
+                {% for key, value in user_answers.items %}
+                <div class="answer-item">
+                    <span class="answer-label">
+                        {% if key == 'ciudad_exp' %}
+                            🏙️ Ciudad de Expedición:
+                        {% elif key == 'tipocredito' %}
+                            💳 Tipo de Crédito:
+                        {% elif key == 'direccion' %}
+                            🏠 Dirección Registrada:
+                        {% elif key == 'celular_completo' %}
+                            📱 Número de Celular:
+                        {% elif key == 'mail' %}
+                            📧 Correo Electrónico:
+                        {% else %}
+                            ℹ️ {{ key|title }}:
+                        {% endif %}
+                    </span>
+                    <div class="answer-value">{{ value }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="footer">
+            <p><strong>Este es un mensaje automático del sistema de validación de Congente.</strong>.<br>
+            Por favor, no responda a este correo electrónico.</p>
+            <p>Cooperativa Ahorro y Crédito Congente - Todos los derechos reservados. Para consultas contacte al equipo de sistemas.</p>
+        </div>
+    </div>
+</body>
+</html>

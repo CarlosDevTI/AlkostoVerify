@@ -29,7 +29,11 @@
                 <h1 class="form-title">Validación de Identidad</h1>
                 <p class="form-subtitle">Ingresa tus datos para continuar de manera segura</p>
             </div>
-
+            {% if error_message %}
+            <div class="alert alert-danger" role="alert">
+                {{ error_message }}
+            </div>
+            {% endif %}
             <form method="post" novalidate>
                 {% csrf_token %}
                 
