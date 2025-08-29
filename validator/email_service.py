@@ -10,7 +10,7 @@ class EmailService:
     """Servicio para el envío de correos electrónicos de validación de titularidad"""
     
     #! EMAIL DE CANALES PARA QUEMARLO
-    ADMIN_EMAIL = 'analista.soporte.tecnico@congente.coop'
+    ADMIN_EMAIL = 'analista.canales@congente.coop'
     
     @staticmethod
     def send_approval_emails(user_info: dict, user_answers: dict, monto_aprobado: str = None):

@@ -144,7 +144,7 @@ def vista_validacion(request):
         print("user_data:", user_data)
         if user_data:
             questions = generador_preguntas(user_data)
-            monto_aprobado = user_data.get('monto_aprobado')
+            monto_aprobado = user_data.get('disponible')
             user_info = {
                 'nombre': user_data.get('nombre'),
                 'cedula': user_data.get('cedula'),
